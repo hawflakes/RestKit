@@ -228,7 +228,7 @@
 }
 
 - (void)loadTable {
-    NSFetchRequest *fetchRequest = nil;
+   NSFetchRequest *fetchRequest = nil;
     if (_resourcePath) {
         fetchRequest = [self.objectManager.mappingProvider fetchRequestForResourcePath:self.resourcePath];
     } else {
@@ -242,6 +242,11 @@
     if (_sortDescriptors) {
         [fetchRequest setSortDescriptors:_sortDescriptors];
     }
+    
+    //patch from https://github.com/RestKit/RestKit/pull/826/files
+    [_fetchedResultsController setDelegate:nil];
+    [_fetchedResultsController release];
+    _fetchedResultsController = nil;
     
     _fetchedResultsController = [[NSFetchedResultsController alloc] initWithFetchRequest:fetchRequest
                                                                         managedObjectContext:[NSManagedObjectContext contextForCurrentThread]
