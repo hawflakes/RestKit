@@ -52,6 +52,10 @@ static const NSTimeInterval kFlushDelay = 0.3;
 @synthesize requestTimeout = _requestTimeout;
 @synthesize suspended = _suspended;
 
+#ifdef BACKGROUND_RKREQUEST_QUEUE
+@synthesize suspendInBackground =  _suspendInBackground;
+#endif
+
 #if TARGET_OS_IPHONE
 @synthesize showsNetworkActivityIndicatorWhenBusy = _showsNetworkActivityIndicatorWhenBusy;
 #endif
@@ -144,6 +148,9 @@ static const NSTimeInterval kFlushDelay = 0.3;
         _concurrentRequestsLimit = 5;
         _requestTimeout = 300;
         _showsNetworkActivityIndicatorWhenBusy = NO;
+#ifdef BACKGROUND_RKREQUEST_QUEUE
+        _suspendInBackground = NO;
+#endif
 
 #if TARGET_OS_IPHONE
         BOOL backgroundOK = &UIApplicationDidEnterBackgroundNotification != NULL;
@@ -557,6 +564,37 @@ static const NSTimeInterval kFlushDelay = 0.3;
 
 #pragma mark - Background Request Support
 
+//need to allow background tasking; using code from here:
+// https://groups.google.com/forum/#!msg/restkit/l_zWrC-TLgw/EJo7yNtA4isJ
+
+#ifdef BACKGROUND_RKREQUEST_QUEUE
+- (void)willTransitionToBackground {
+    if (_suspendInBackground) {
+        RKLogDebug(@"App is transitioning into background, suspending queue");
+        
+        // Suspend the queue so background requests do not trigger additional requests on state changes
+        self.suspended = YES;
+    } else {
+        //Ask the system not to kill us while we work through the existing queue
+        UIApplication*    app = [UIApplication sharedApplication];
+        
+        __block UIBackgroundTaskIdentifier bgTask;
+        
+        bgTask = [app beginBackgroundTaskWithExpirationHandler:^{
+            NSLog(@"Background time ran out!");
+            
+            if (app.applicationState == UIApplicationStateBackground)
+            {
+                //Make sure we haven't returned to the application
+                self.suspended = YES;
+            }
+            
+            [app endBackgroundTask:bgTask];
+            bgTask = UIBackgroundTaskInvalid;
+        }];
+    }
+}
+#else
 - (void)willTransitionToBackground
 {
     RKLogDebug(@"App is transitioning into background, suspending queue");
@@ -564,6 +602,7 @@ static const NSTimeInterval kFlushDelay = 0.3;
     // Suspend the queue so background requests do not trigger additional requests on state changes
     self.suspended = YES;
 }
+#endif
 
 - (void)willTransitionToForeground
 {

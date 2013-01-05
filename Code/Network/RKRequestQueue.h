@@ -21,6 +21,10 @@
 #import <Foundation/Foundation.h>
 #import "RKRequest.h"
 
+//need to allow background tasking; using code from here:
+// https://groups.google.com/forum/#!msg/restkit/l_zWrC-TLgw/EJo7yNtA4isJ
+#define BACKGROUND_RKREQUEST_QUEUE 1
+
 @protocol RKRequestQueueDelegate;
 
 /**
@@ -108,6 +112,11 @@
 ///-----------------------------------------------------------------------------
 /// @name Managing the Queue
 ///-----------------------------------------------------------------------------
+
+
+#ifdef BACKGROUND_RKREQUEST_QUEUE
+@property (nonatomic) BOOL suspendInBackground;
+#endif
 
 /**
  The number of concurrent requests supported by this queue.
