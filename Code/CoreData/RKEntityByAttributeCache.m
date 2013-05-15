@@ -184,7 +184,7 @@
 
 - (void)addObject:(NSManagedObject *)object
 {
-    NSAssert([object.entity isEqual:self.entity], @"Cannot add object with entity '%@' to cache with entity of '%@'", [[object entity] name], [self.entity name]);
+    NSAssert([object.entity isKindOfEntity:self.entity], @"Cannot add object with entity '%@' to cache with entity of '%@'", [[object entity] name], [self.entity name]);
     id attributeValue = [object valueForKey:self.attribute];
     // Coerce to a string if possible
     attributeValue = [self shouldCoerceAttributeToString:attributeValue] ? [attributeValue stringValue] : attributeValue;
@@ -208,7 +208,7 @@
 
 - (void)removeObject:(NSManagedObject *)object
 {
-    NSAssert([object.entity isEqual:self.entity], @"Cannot remove object with entity '%@' from cache with entity of '%@'", [[object entity] name], [self.entity name]);
+    NSAssert([object.entity isKindOfEntity:self.entity], @"Cannot remove object with entity '%@' from cache with entity of '%@'", [[object entity] name], [self.entity name]);
     id attributeValue = [object valueForKey:self.attribute];
     // Coerce to a string if possible
     attributeValue = [self shouldCoerceAttributeToString:attributeValue] ? [attributeValue stringValue] : attributeValue;
@@ -232,7 +232,7 @@
 
 - (BOOL)containsObject:(NSManagedObject *)object
 {
-    if (! [object.entity isEqual:self.entity]) return NO;
+    if (! [object.entity isKindOfEntity:self.entity]) return NO;
     id attributeValue = [object valueForKey:self.attribute];
     // Coerce to a string if possible
     attributeValue = [self shouldCoerceAttributeToString:attributeValue] ? [attributeValue stringValue] : attributeValue;
